@@ -2,41 +2,36 @@ import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# Load environment variables
+# Взимаме BOT_TOKEN от ENV
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# Тук можеш да сложиш твоя CHANNEL_ID, ако искаш да пращаш автоматични сигнали
 CHANNEL_ID = os.getenv("CHANNEL_ID")
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle the /start command."""
-    await update.message.reply_text("LionMartingaleBot is running! Use /help for more info.")
+# Команда /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("👋 Здравей! Аз съм твоят трейдинг бот. 🚀")
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle the /help command."""
-    await update.message.reply_text("Available commands:\n/start - Start the bot\n/help - Show this message")
+# Примерна команда /signal
+async def signal(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Тук можеш да извикаш твоята логика за сигнали
+    message = "📈 EUR/USD Buy 0.12 lots\nTP: 4 pips\nSL: 2 pips"
+    await update.message.reply_text(message)
 
-async def send_to_channel(context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a periodic message to the specified channel."""
-    await context.bot.send_message(chat_id=CHANNEL_ID, text="LionMartingaleBot is alive!")
+    # Ако искаш да пращаш и в канал:
+    if CHANNEL_ID:
+        await context.bot.send_message(chat_id=CHANNEL_ID, text=message)
 
-def main() -> None:
-    """Run the bot."""
-    if not BOT_TOKEN or not CHANNEL_ID:
-        print("Error: BOT_TOKEN or CHANNEL_ID not set in environment variables.")
-        return
-
-    # Create the Application
+# Главна функция
+def main():
     application = Application.builder().token(BOT_TOKEN).build()
 
-    # Add command handlers
+    # Регистрация на команди
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("signal", signal))
 
-    # Schedule periodic message to channel every 60 seconds
-    application.job_queue.run_repeating(send_to_channel, interval=60, first=10)
-
-    # Start the bot
-    print("Bot is starting...")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    # Стартиране на бота
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
